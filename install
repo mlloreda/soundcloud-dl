@@ -9,6 +9,8 @@ echo '|                             SCDL Installer                              
 echo ' *---------------------------------------------------------------------------*'
 echo ''
 
+CONFIG="$HOME/scdl.cfg"
+
 function menu() {
     clear
     PS3='Please enter your choice: '
@@ -43,39 +45,46 @@ function install() {
     sudo cp scdl "$dest"
 }
 
+function write_config() {
+    cat <<EOF > "$CONFIG"
+pathtomusic="$path"
+continue="$cont"
+EOF
+}
+
 function setpath() {
     echo "Where do you want to download your Music?"
     read -p 'path : ' path
     if [ -d $path ]; then
-        echo -e 'pathtomusic="'"$path"'"'"\n"'continue="'"$cont"'"' > /$HOME/.scdl.cfg
         echo -e 'Path set !\n'
     else
         echo 'The path do not exist...'
         read -p 'Would you like to Create it? (y/n)?' choice
         if [ "$choice" = "y" ]; then
             mkdir $path
-            echo -e 'pathtomusic="'"$path"'"'"\n"'continue="'"$cont"'"' > /$HOME/.scdl.cfg
             echo -e 'Path set !\n'
         else
             setpath
         fi
     fi
+
+    write_config
 }
 
 function setcon() {
     read -p "Would you like to stop the script when it encounter a music that already exist ?(y/n)" choice
     if [ "$choice" = "y" ]; then
         cont="false"
-        echo -e 'pathtomusic="'"$path"'"'"\n"'continue="'"$cont"'"' > /$HOME/.scdl.cfg
         echo -e 'The script will exit if it encounter a file that already exist\n'
     elif [ "$choice" = "n" ]; then
         cont="true"
-        echo -e 'pathtomusic="'"$path"'"'"\n"'continue="'"$cont"'"' > /$HOME/.scdl.cfg
         echo -e 'The script will skip the music that already exist\n'
     else
         echo 'Bad option'
         setcon
     fi
+
+    write_config
 }
 
 function quit() {
@@ -97,8 +106,8 @@ function detectedOS(){
     [[ -f /etc/arch-release    ]] && platform='arch'
 }
 
-if [ -f /$HOME/.scdl.cfg ]; then
-    source /$HOME/.scdl.cfg
+if [ -f "$CONFIG" ]; then
+    source "$CONFIG"
     path=$pathtomusic
     cont=$continue
     menu
